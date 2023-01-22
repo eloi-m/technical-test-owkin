@@ -34,7 +34,7 @@ curl -X POST -F file=@<PATH_TO_DOCKERFILE>  http://<ID_ADRESS>/job/build
 Here's an example of the command that uses the `test_endpoint.Dockerfile` from this repo :
 
 ```bash
-curl -X POST -F file=@test_endpoint.Dockerfile  http://34.105.17.105/job/build
+curl -X POST -F file=@test_endpoint.Dockerfile  http://34.79.111.10/job/build
 ```
 
 The route should return `{"id": 1, "filename": test_endpoint.Dockerfile"}`.
@@ -54,7 +54,7 @@ If the build/run takes a while, you might need to refresh in a few seconds.
 For time reasons, I did not work on checking the vulnerabilities of the Docker Container.
 This would be possible with a service like Snyk.
 
-It would also be possible to double down and to check the vulnerabilities of the code inside the Git repo itself, using GitlabCI and tools like Bandit, safety, or SonarQube.
+It would also be possible to double down and to check the vulnerabilities of the code inside the Git repo itself, using GitlabCI and tools like Bandit, Safety, or SonarQube.
 
 ## Limits of the architecture
 
@@ -65,7 +65,7 @@ This is fine for a proof of concept, but I would not recommand this solution for
 * Security during the build : running Docker in Docker (DinD) is a bad practice since it requires the initial container to be run in privileged mode, giving the children containers access to the `/dev` filesystem (I recommand [this article](https://blog.loof.fr/2018/01/to-dind-or-not-do-dind.html) which explains the limitations of DinD)
 * Security during the run: the service also **runs** the container that was built using DinD. Since the volume `/data` (mounted to a bucket) is exposed to the container, anyone can access the content of the bucket with read/write permissions.
 * Scalability: the service would not be cost-effective at scale (it would require spinning more VMs)
-
+* Maintainability: since the 3 tasks that expose the route, build and run the containers are all imbricated, the service would be hard to maintain. 
 
 ## Possible improvements
 
@@ -137,7 +137,7 @@ gcloud compute instances create-with-container \
     $INSTANCE_NAME --project=$PROJECT_NAME --zone=$ZONE --machine-type=e2-small \
     --network-interface=network-tier=PREMIUM,subnet=default --maintenance-policy=MIGRATE \
     --provisioning-model=STANDARD --service-account=$PROJECT_ID-compute@developer.gserviceaccount.com \
-    --scopes=https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/trace.append,https://www.googleapis.com/auth/devstorage.read_write \
+    --scopes=https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/trace.append,https://www.googleapis.com/auth/devstorage.full_control \
     --tags=http-server,https-server --image=projects/cos-cloud/global/images/cos-stable-101-17162-40-52 --boot-disk-size=10GB --boot-disk-type=pd-balanced --boot-disk-device-name=instance-6 \
     --container-image=$REGION-docker.pkg.dev/$PROJECT_NAME/$REPO_NAME/${CONTAINER_NAME} \
     --container-restart-policy=always --container-privileged --container-env=BUCKET=$BUCKET_NAME \
@@ -157,7 +157,7 @@ Create firewall rule to allow traffic on port 80:
 gcloud compute firewall-rules create rule-allow-tcp-80 --source-ranges 0.0.0.0/0 --target-tags allow-tcp-80 --allow tcp:80
 ```
 
-Add the firewall rule to the instance
+Add the firewall rule to the instance:
 ```bash
 gcloud compute instances add-tags $INSTANCE_NAME --tags allow-tcp-80
 ```
