@@ -34,7 +34,7 @@ curl -X POST -F file=@<PATH_TO_DOCKERFILE>  http://<ID_ADRESS>/job/build
 Here's an example of the command that uses the `test_endpoint.Dockerfile` from this repo :
 
 ```bash
-curl -X POST -F file=@test_endpoint.Dockerfile  http://34.79.111.10/job/build
+curl -X POST -F file=@test_endpoint.Dockerfile  http://34.79.150.175/job/build
 ```
 
 The route should return `{"id": 1, "filename": test_endpoint.Dockerfile"}`.
@@ -131,7 +131,7 @@ export PROJECT_ID=$(gcloud projects list \
   --format="value(PROJECT_NUMBER)")
 ```
 
-
+Then, create the Compute Engine instance:
 ```bash
 gcloud compute instances create-with-container \
     $INSTANCE_NAME --project=$PROJECT_NAME --zone=$ZONE --machine-type=e2-small \
